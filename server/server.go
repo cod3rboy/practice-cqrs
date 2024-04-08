@@ -27,12 +27,16 @@ type Server struct {
 
 func NewServer(params NewServerParams) *Server {
 	server := &Server{engine: gin.New()}
+	// middlewares
 	server.engine.Use(ginzap.Ginzap(params.Logger, time.RFC3339, true))
 	server.engine.Use(ginzap.RecoveryWithZap(params.Logger, true))
 
 	params.LC.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			return server.Run(ctx, params.Config.ServerPort)
+		OnStart: func(context.Context) error {
+			go func() {
+				server.Run(params.Config.ServerPort)
+			}()
+			return nil
 		},
 		OnStop: func(context.Context) error {
 			return server.Stop()
@@ -42,13 +46,13 @@ func NewServer(params NewServerParams) *Server {
 	return server
 }
 
-func (s *Server) Run(ctx context.Context, port int) error {
+func (s *Server) Run(port int) error {
 	gracefulServer, err := graceful.New(s.engine, graceful.WithAddr(fmt.Sprintf(":%d", port)))
 	if err != nil {
 		return err
 	}
 	s.graceful = gracefulServer
-	return s.graceful.RunWithContext(ctx)
+	return s.graceful.Run()
 }
 
 func (s *Server) Stop() error {
@@ -56,4 +60,8 @@ func (s *Server) Stop() error {
 		return nil
 	}
 	return s.graceful.Stop()
+}
+
+func (s *Server) Router() *gin.Engine {
+	return s.engine
 }
