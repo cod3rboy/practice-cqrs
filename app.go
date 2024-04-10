@@ -23,6 +23,7 @@ func SetupAndRun() {
 			fx.Annotate(eventstore.NewPostgresEventStore, fx.As(new(eventstore.Store))),
 		),
 		handlers.HandlersModule,
+		TemporalModule,
 		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
 			return &fxevent.ZapLogger{Logger: log}
 		}),
@@ -31,12 +32,4 @@ func SetupAndRun() {
 	)
 
 	app.Run()
-}
-
-func NewLogger(config config.Config) *zap.Logger {
-	if config.Environment == "dev" {
-		return zap.NewExample()
-	}
-	logger, _ := zap.NewProduction()
-	return logger
 }
