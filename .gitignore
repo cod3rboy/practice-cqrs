@@ -25,3 +25,6 @@ go.work
 
 # .env file
 .env
+
+# debug binaries
+*/**/__debug_bin*
