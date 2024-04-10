@@ -27,8 +27,7 @@ type EventRecord struct {
 	StreamPosition uint64
 	GlobalPosition uint64
 	CreatedDate    time.Time
-	EventType      string
-	Data           []byte
+	Event
 }
 
 type Result struct {
@@ -118,8 +117,10 @@ func (s *pgStore) ReadStreamEvents(ctx context.Context, streamID string) ([]Even
 			StreamPosition: e.StreamPosition,
 			GlobalPosition: uint64(e.ID),
 			CreatedDate:    e.CreatedDate,
-			EventType:      e.EventType,
-			Data:           e.Data,
+			Event: Event{
+				Type: e.EventType,
+				Data: e.Data,
+			},
 		})
 	}
 

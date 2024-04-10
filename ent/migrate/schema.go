@@ -32,10 +32,13 @@ var (
 	}
 	// PatientsColumns holds the columns for the "patients" table.
 	PatientsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "ward", Type: field.TypeInt},
 		{Name: "age", Type: field.TypeInt},
+		{Name: "discharged", Type: field.TypeBool},
+		{Name: "current_version", Type: field.TypeInt32, Nullable: true},
+		{Name: "projected_at_datetime", Type: field.TypeTime},
 	}
 	// PatientsTable holds the schema information for the "patients" table.
 	PatientsTable = &schema.Table{

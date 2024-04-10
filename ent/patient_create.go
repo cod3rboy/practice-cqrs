@@ -6,10 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/cod3rboy/practice-cqrs/ent/patient"
+	"github.com/google/uuid"
 )
 
 // PatientCreate is the builder for creating a Patient entity.
@@ -17,6 +21,7 @@ type PatientCreate struct {
 	config
 	mutation *PatientMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -34,6 +39,38 @@ func (pc *PatientCreate) SetWard(i int) *PatientCreate {
 // SetAge sets the "age" field.
 func (pc *PatientCreate) SetAge(i int) *PatientCreate {
 	pc.mutation.SetAge(i)
+	return pc
+}
+
+// SetDischarged sets the "discharged" field.
+func (pc *PatientCreate) SetDischarged(b bool) *PatientCreate {
+	pc.mutation.SetDischarged(b)
+	return pc
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (pc *PatientCreate) SetCurrentVersion(i int32) *PatientCreate {
+	pc.mutation.SetCurrentVersion(i)
+	return pc
+}
+
+// SetNillableCurrentVersion sets the "current_version" field if the given value is not nil.
+func (pc *PatientCreate) SetNillableCurrentVersion(i *int32) *PatientCreate {
+	if i != nil {
+		pc.SetCurrentVersion(*i)
+	}
+	return pc
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (pc *PatientCreate) SetProjectedAtDatetime(t time.Time) *PatientCreate {
+	pc.mutation.SetProjectedAtDatetime(t)
+	return pc
+}
+
+// SetID sets the "id" field.
+func (pc *PatientCreate) SetID(u uuid.UUID) *PatientCreate {
+	pc.mutation.SetID(u)
 	return pc
 }
 
@@ -80,6 +117,12 @@ func (pc *PatientCreate) check() error {
 	if _, ok := pc.mutation.Age(); !ok {
 		return &ValidationError{Name: "age", err: errors.New(`ent: missing required field "Patient.age"`)}
 	}
+	if _, ok := pc.mutation.Discharged(); !ok {
+		return &ValidationError{Name: "discharged", err: errors.New(`ent: missing required field "Patient.discharged"`)}
+	}
+	if _, ok := pc.mutation.ProjectedAtDatetime(); !ok {
+		return &ValidationError{Name: "projected_at_datetime", err: errors.New(`ent: missing required field "Patient.projected_at_datetime"`)}
+	}
 	return nil
 }
 
@@ -94,8 +137,13 @@ func (pc *PatientCreate) sqlSave(ctx context.Context) (*Patient, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	pc.mutation.id = &_node.ID
 	pc.mutation.done = true
 	return _node, nil
@@ -104,8 +152,13 @@ func (pc *PatientCreate) sqlSave(ctx context.Context) (*Patient, error) {
 func (pc *PatientCreate) createSpec() (*Patient, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Patient{config: pc.config}
-		_spec = sqlgraph.NewCreateSpec(patient.Table, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(patient.Table, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeUUID))
 	)
+	_spec.OnConflict = pc.conflict
+	if id, ok := pc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := pc.mutation.Name(); ok {
 		_spec.SetField(patient.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -118,7 +171,362 @@ func (pc *PatientCreate) createSpec() (*Patient, *sqlgraph.CreateSpec) {
 		_spec.SetField(patient.FieldAge, field.TypeInt, value)
 		_node.Age = value
 	}
+	if value, ok := pc.mutation.Discharged(); ok {
+		_spec.SetField(patient.FieldDischarged, field.TypeBool, value)
+		_node.Discharged = value
+	}
+	if value, ok := pc.mutation.CurrentVersion(); ok {
+		_spec.SetField(patient.FieldCurrentVersion, field.TypeInt32, value)
+		_node.CurrentVersion = &value
+	}
+	if value, ok := pc.mutation.ProjectedAtDatetime(); ok {
+		_spec.SetField(patient.FieldProjectedAtDatetime, field.TypeTime, value)
+		_node.ProjectedAtDatetime = value
+	}
 	return _node, _spec
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Patient.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PatientUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (pc *PatientCreate) OnConflict(opts ...sql.ConflictOption) *PatientUpsertOne {
+	pc.conflict = opts
+	return &PatientUpsertOne{
+		create: pc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Patient.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pc *PatientCreate) OnConflictColumns(columns ...string) *PatientUpsertOne {
+	pc.conflict = append(pc.conflict, sql.ConflictColumns(columns...))
+	return &PatientUpsertOne{
+		create: pc,
+	}
+}
+
+type (
+	// PatientUpsertOne is the builder for "upsert"-ing
+	//  one Patient node.
+	PatientUpsertOne struct {
+		create *PatientCreate
+	}
+
+	// PatientUpsert is the "OnConflict" setter.
+	PatientUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *PatientUpsert) SetName(v string) *PatientUpsert {
+	u.Set(patient.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PatientUpsert) UpdateName() *PatientUpsert {
+	u.SetExcluded(patient.FieldName)
+	return u
+}
+
+// SetWard sets the "ward" field.
+func (u *PatientUpsert) SetWard(v int) *PatientUpsert {
+	u.Set(patient.FieldWard, v)
+	return u
+}
+
+// UpdateWard sets the "ward" field to the value that was provided on create.
+func (u *PatientUpsert) UpdateWard() *PatientUpsert {
+	u.SetExcluded(patient.FieldWard)
+	return u
+}
+
+// AddWard adds v to the "ward" field.
+func (u *PatientUpsert) AddWard(v int) *PatientUpsert {
+	u.Add(patient.FieldWard, v)
+	return u
+}
+
+// SetAge sets the "age" field.
+func (u *PatientUpsert) SetAge(v int) *PatientUpsert {
+	u.Set(patient.FieldAge, v)
+	return u
+}
+
+// UpdateAge sets the "age" field to the value that was provided on create.
+func (u *PatientUpsert) UpdateAge() *PatientUpsert {
+	u.SetExcluded(patient.FieldAge)
+	return u
+}
+
+// AddAge adds v to the "age" field.
+func (u *PatientUpsert) AddAge(v int) *PatientUpsert {
+	u.Add(patient.FieldAge, v)
+	return u
+}
+
+// SetDischarged sets the "discharged" field.
+func (u *PatientUpsert) SetDischarged(v bool) *PatientUpsert {
+	u.Set(patient.FieldDischarged, v)
+	return u
+}
+
+// UpdateDischarged sets the "discharged" field to the value that was provided on create.
+func (u *PatientUpsert) UpdateDischarged() *PatientUpsert {
+	u.SetExcluded(patient.FieldDischarged)
+	return u
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (u *PatientUpsert) SetCurrentVersion(v int32) *PatientUpsert {
+	u.Set(patient.FieldCurrentVersion, v)
+	return u
+}
+
+// UpdateCurrentVersion sets the "current_version" field to the value that was provided on create.
+func (u *PatientUpsert) UpdateCurrentVersion() *PatientUpsert {
+	u.SetExcluded(patient.FieldCurrentVersion)
+	return u
+}
+
+// AddCurrentVersion adds v to the "current_version" field.
+func (u *PatientUpsert) AddCurrentVersion(v int32) *PatientUpsert {
+	u.Add(patient.FieldCurrentVersion, v)
+	return u
+}
+
+// ClearCurrentVersion clears the value of the "current_version" field.
+func (u *PatientUpsert) ClearCurrentVersion() *PatientUpsert {
+	u.SetNull(patient.FieldCurrentVersion)
+	return u
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (u *PatientUpsert) SetProjectedAtDatetime(v time.Time) *PatientUpsert {
+	u.Set(patient.FieldProjectedAtDatetime, v)
+	return u
+}
+
+// UpdateProjectedAtDatetime sets the "projected_at_datetime" field to the value that was provided on create.
+func (u *PatientUpsert) UpdateProjectedAtDatetime() *PatientUpsert {
+	u.SetExcluded(patient.FieldProjectedAtDatetime)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.Patient.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(patient.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PatientUpsertOne) UpdateNewValues() *PatientUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(patient.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Patient.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *PatientUpsertOne) Ignore() *PatientUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PatientUpsertOne) DoNothing() *PatientUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PatientCreate.OnConflict
+// documentation for more info.
+func (u *PatientUpsertOne) Update(set func(*PatientUpsert)) *PatientUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PatientUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *PatientUpsertOne) SetName(v string) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PatientUpsertOne) UpdateName() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetWard sets the "ward" field.
+func (u *PatientUpsertOne) SetWard(v int) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetWard(v)
+	})
+}
+
+// AddWard adds v to the "ward" field.
+func (u *PatientUpsertOne) AddWard(v int) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.AddWard(v)
+	})
+}
+
+// UpdateWard sets the "ward" field to the value that was provided on create.
+func (u *PatientUpsertOne) UpdateWard() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateWard()
+	})
+}
+
+// SetAge sets the "age" field.
+func (u *PatientUpsertOne) SetAge(v int) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetAge(v)
+	})
+}
+
+// AddAge adds v to the "age" field.
+func (u *PatientUpsertOne) AddAge(v int) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.AddAge(v)
+	})
+}
+
+// UpdateAge sets the "age" field to the value that was provided on create.
+func (u *PatientUpsertOne) UpdateAge() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateAge()
+	})
+}
+
+// SetDischarged sets the "discharged" field.
+func (u *PatientUpsertOne) SetDischarged(v bool) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetDischarged(v)
+	})
+}
+
+// UpdateDischarged sets the "discharged" field to the value that was provided on create.
+func (u *PatientUpsertOne) UpdateDischarged() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateDischarged()
+	})
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (u *PatientUpsertOne) SetCurrentVersion(v int32) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetCurrentVersion(v)
+	})
+}
+
+// AddCurrentVersion adds v to the "current_version" field.
+func (u *PatientUpsertOne) AddCurrentVersion(v int32) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.AddCurrentVersion(v)
+	})
+}
+
+// UpdateCurrentVersion sets the "current_version" field to the value that was provided on create.
+func (u *PatientUpsertOne) UpdateCurrentVersion() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateCurrentVersion()
+	})
+}
+
+// ClearCurrentVersion clears the value of the "current_version" field.
+func (u *PatientUpsertOne) ClearCurrentVersion() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.ClearCurrentVersion()
+	})
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (u *PatientUpsertOne) SetProjectedAtDatetime(v time.Time) *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetProjectedAtDatetime(v)
+	})
+}
+
+// UpdateProjectedAtDatetime sets the "projected_at_datetime" field to the value that was provided on create.
+func (u *PatientUpsertOne) UpdateProjectedAtDatetime() *PatientUpsertOne {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateProjectedAtDatetime()
+	})
+}
+
+// Exec executes the query.
+func (u *PatientUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PatientCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PatientUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *PatientUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: PatientUpsertOne.ID is not supported by MySQL driver. Use PatientUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *PatientUpsertOne) IDX(ctx context.Context) uuid.UUID {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // PatientCreateBulk is the builder for creating many Patient entities in bulk.
@@ -126,6 +534,7 @@ type PatientCreateBulk struct {
 	config
 	err      error
 	builders []*PatientCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Patient entities in the database.
@@ -154,6 +563,7 @@ func (pcb *PatientCreateBulk) Save(ctx context.Context) ([]*Patient, error) {
 					_, err = mutators[i+1].Mutate(root, pcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = pcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, pcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -165,10 +575,6 @@ func (pcb *PatientCreateBulk) Save(ctx context.Context) ([]*Patient, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})
@@ -204,6 +610,232 @@ func (pcb *PatientCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (pcb *PatientCreateBulk) ExecX(ctx context.Context) {
 	if err := pcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Patient.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PatientUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (pcb *PatientCreateBulk) OnConflict(opts ...sql.ConflictOption) *PatientUpsertBulk {
+	pcb.conflict = opts
+	return &PatientUpsertBulk{
+		create: pcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Patient.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pcb *PatientCreateBulk) OnConflictColumns(columns ...string) *PatientUpsertBulk {
+	pcb.conflict = append(pcb.conflict, sql.ConflictColumns(columns...))
+	return &PatientUpsertBulk{
+		create: pcb,
+	}
+}
+
+// PatientUpsertBulk is the builder for "upsert"-ing
+// a bulk of Patient nodes.
+type PatientUpsertBulk struct {
+	create *PatientCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Patient.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(patient.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *PatientUpsertBulk) UpdateNewValues() *PatientUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(patient.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Patient.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *PatientUpsertBulk) Ignore() *PatientUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PatientUpsertBulk) DoNothing() *PatientUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PatientCreateBulk.OnConflict
+// documentation for more info.
+func (u *PatientUpsertBulk) Update(set func(*PatientUpsert)) *PatientUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PatientUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *PatientUpsertBulk) SetName(v string) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *PatientUpsertBulk) UpdateName() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetWard sets the "ward" field.
+func (u *PatientUpsertBulk) SetWard(v int) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetWard(v)
+	})
+}
+
+// AddWard adds v to the "ward" field.
+func (u *PatientUpsertBulk) AddWard(v int) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.AddWard(v)
+	})
+}
+
+// UpdateWard sets the "ward" field to the value that was provided on create.
+func (u *PatientUpsertBulk) UpdateWard() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateWard()
+	})
+}
+
+// SetAge sets the "age" field.
+func (u *PatientUpsertBulk) SetAge(v int) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetAge(v)
+	})
+}
+
+// AddAge adds v to the "age" field.
+func (u *PatientUpsertBulk) AddAge(v int) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.AddAge(v)
+	})
+}
+
+// UpdateAge sets the "age" field to the value that was provided on create.
+func (u *PatientUpsertBulk) UpdateAge() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateAge()
+	})
+}
+
+// SetDischarged sets the "discharged" field.
+func (u *PatientUpsertBulk) SetDischarged(v bool) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetDischarged(v)
+	})
+}
+
+// UpdateDischarged sets the "discharged" field to the value that was provided on create.
+func (u *PatientUpsertBulk) UpdateDischarged() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateDischarged()
+	})
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (u *PatientUpsertBulk) SetCurrentVersion(v int32) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetCurrentVersion(v)
+	})
+}
+
+// AddCurrentVersion adds v to the "current_version" field.
+func (u *PatientUpsertBulk) AddCurrentVersion(v int32) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.AddCurrentVersion(v)
+	})
+}
+
+// UpdateCurrentVersion sets the "current_version" field to the value that was provided on create.
+func (u *PatientUpsertBulk) UpdateCurrentVersion() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateCurrentVersion()
+	})
+}
+
+// ClearCurrentVersion clears the value of the "current_version" field.
+func (u *PatientUpsertBulk) ClearCurrentVersion() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.ClearCurrentVersion()
+	})
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (u *PatientUpsertBulk) SetProjectedAtDatetime(v time.Time) *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.SetProjectedAtDatetime(v)
+	})
+}
+
+// UpdateProjectedAtDatetime sets the "projected_at_datetime" field to the value that was provided on create.
+func (u *PatientUpsertBulk) UpdateProjectedAtDatetime() *PatientUpsertBulk {
+	return u.Update(func(s *PatientUpsert) {
+		s.UpdateProjectedAtDatetime()
+	})
+}
+
+// Exec executes the query.
+func (u *PatientUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PatientCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PatientCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PatientUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

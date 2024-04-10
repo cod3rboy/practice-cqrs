@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	"github.com/cod3rboy/practice-cqrs/ent/migrate"
+	"github.com/google/uuid"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -400,7 +401,7 @@ func (c *PatientClient) UpdateOne(pa *Patient) *PatientUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *PatientClient) UpdateOneID(id int) *PatientUpdateOne {
+func (c *PatientClient) UpdateOneID(id uuid.UUID) *PatientUpdateOne {
 	mutation := newPatientMutation(c.config, OpUpdateOne, withPatientID(id))
 	return &PatientUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -417,7 +418,7 @@ func (c *PatientClient) DeleteOne(pa *Patient) *PatientDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PatientClient) DeleteOneID(id int) *PatientDeleteOne {
+func (c *PatientClient) DeleteOneID(id uuid.UUID) *PatientDeleteOne {
 	builder := c.Delete().Where(patient.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -434,12 +435,12 @@ func (c *PatientClient) Query() *PatientQuery {
 }
 
 // Get returns a Patient entity by its id.
-func (c *PatientClient) Get(ctx context.Context, id int) (*Patient, error) {
+func (c *PatientClient) Get(ctx context.Context, id uuid.UUID) (*Patient, error) {
 	return c.Query().Where(patient.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *PatientClient) GetX(ctx context.Context, id int) *Patient {
+func (c *PatientClient) GetX(ctx context.Context, id uuid.UUID) *Patient {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

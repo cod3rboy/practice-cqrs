@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/cod3rboy/practice-cqrs/ent/patient"
 	"github.com/cod3rboy/practice-cqrs/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // PatientQuery is the builder for querying Patient entities.
@@ -81,8 +82,8 @@ func (pq *PatientQuery) FirstX(ctx context.Context) *Patient {
 
 // FirstID returns the first Patient ID from the query.
 // Returns a *NotFoundError when no Patient ID was found.
-func (pq *PatientQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (pq *PatientQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = pq.Limit(1).IDs(setContextOp(ctx, pq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +95,7 @@ func (pq *PatientQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (pq *PatientQuery) FirstIDX(ctx context.Context) int {
+func (pq *PatientQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := pq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +133,8 @@ func (pq *PatientQuery) OnlyX(ctx context.Context) *Patient {
 // OnlyID is like Only, but returns the only Patient ID in the query.
 // Returns a *NotSingularError when more than one Patient ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (pq *PatientQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (pq *PatientQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = pq.Limit(2).IDs(setContextOp(ctx, pq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (pq *PatientQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (pq *PatientQuery) OnlyIDX(ctx context.Context) int {
+func (pq *PatientQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := pq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +178,7 @@ func (pq *PatientQuery) AllX(ctx context.Context) []*Patient {
 }
 
 // IDs executes the query and returns a list of Patient IDs.
-func (pq *PatientQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (pq *PatientQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if pq.ctx.Unique == nil && pq.path != nil {
 		pq.Unique(true)
 	}
@@ -189,7 +190,7 @@ func (pq *PatientQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (pq *PatientQuery) IDsX(ctx context.Context) []int {
+func (pq *PatientQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := pq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -364,7 +365,7 @@ func (pq *PatientQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (pq *PatientQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(patient.Table, patient.Columns, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(patient.Table, patient.Columns, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeUUID))
 	_spec.From = pq.sql
 	if unique := pq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

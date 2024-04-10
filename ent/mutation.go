@@ -14,6 +14,7 @@ import (
 	"github.com/cod3rboy/practice-cqrs/ent/event"
 	"github.com/cod3rboy/practice-cqrs/ent/patient"
 	"github.com/cod3rboy/practice-cqrs/ent/predicate"
+	"github.com/google/uuid"
 )
 
 const (
@@ -632,18 +633,22 @@ func (m *EventMutation) ResetEdge(name string) error {
 // PatientMutation represents an operation that mutates the Patient nodes in the graph.
 type PatientMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	name          *string
-	ward          *int
-	addward       *int
-	age           *int
-	addage        *int
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Patient, error)
-	predicates    []predicate.Patient
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	name                  *string
+	ward                  *int
+	addward               *int
+	age                   *int
+	addage                *int
+	discharged            *bool
+	current_version       *int32
+	addcurrent_version    *int32
+	projected_at_datetime *time.Time
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*Patient, error)
+	predicates            []predicate.Patient
 }
 
 var _ ent.Mutation = (*PatientMutation)(nil)
@@ -666,7 +671,7 @@ func newPatientMutation(c config, op Op, opts ...patientOption) *PatientMutation
 }
 
 // withPatientID sets the ID field of the mutation.
-func withPatientID(id int) patientOption {
+func withPatientID(id uuid.UUID) patientOption {
 	return func(m *PatientMutation) {
 		var (
 			err   error
@@ -716,9 +721,15 @@ func (m PatientMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Patient entities.
+func (m *PatientMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *PatientMutation) ID() (id int, exists bool) {
+func (m *PatientMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -729,12 +740,12 @@ func (m *PatientMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *PatientMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *PatientMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -892,6 +903,148 @@ func (m *PatientMutation) ResetAge() {
 	m.addage = nil
 }
 
+// SetDischarged sets the "discharged" field.
+func (m *PatientMutation) SetDischarged(b bool) {
+	m.discharged = &b
+}
+
+// Discharged returns the value of the "discharged" field in the mutation.
+func (m *PatientMutation) Discharged() (r bool, exists bool) {
+	v := m.discharged
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDischarged returns the old "discharged" field's value of the Patient entity.
+// If the Patient object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PatientMutation) OldDischarged(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDischarged is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDischarged requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDischarged: %w", err)
+	}
+	return oldValue.Discharged, nil
+}
+
+// ResetDischarged resets all changes to the "discharged" field.
+func (m *PatientMutation) ResetDischarged() {
+	m.discharged = nil
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (m *PatientMutation) SetCurrentVersion(i int32) {
+	m.current_version = &i
+	m.addcurrent_version = nil
+}
+
+// CurrentVersion returns the value of the "current_version" field in the mutation.
+func (m *PatientMutation) CurrentVersion() (r int32, exists bool) {
+	v := m.current_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentVersion returns the old "current_version" field's value of the Patient entity.
+// If the Patient object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PatientMutation) OldCurrentVersion(ctx context.Context) (v *int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentVersion: %w", err)
+	}
+	return oldValue.CurrentVersion, nil
+}
+
+// AddCurrentVersion adds i to the "current_version" field.
+func (m *PatientMutation) AddCurrentVersion(i int32) {
+	if m.addcurrent_version != nil {
+		*m.addcurrent_version += i
+	} else {
+		m.addcurrent_version = &i
+	}
+}
+
+// AddedCurrentVersion returns the value that was added to the "current_version" field in this mutation.
+func (m *PatientMutation) AddedCurrentVersion() (r int32, exists bool) {
+	v := m.addcurrent_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCurrentVersion clears the value of the "current_version" field.
+func (m *PatientMutation) ClearCurrentVersion() {
+	m.current_version = nil
+	m.addcurrent_version = nil
+	m.clearedFields[patient.FieldCurrentVersion] = struct{}{}
+}
+
+// CurrentVersionCleared returns if the "current_version" field was cleared in this mutation.
+func (m *PatientMutation) CurrentVersionCleared() bool {
+	_, ok := m.clearedFields[patient.FieldCurrentVersion]
+	return ok
+}
+
+// ResetCurrentVersion resets all changes to the "current_version" field.
+func (m *PatientMutation) ResetCurrentVersion() {
+	m.current_version = nil
+	m.addcurrent_version = nil
+	delete(m.clearedFields, patient.FieldCurrentVersion)
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (m *PatientMutation) SetProjectedAtDatetime(t time.Time) {
+	m.projected_at_datetime = &t
+}
+
+// ProjectedAtDatetime returns the value of the "projected_at_datetime" field in the mutation.
+func (m *PatientMutation) ProjectedAtDatetime() (r time.Time, exists bool) {
+	v := m.projected_at_datetime
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProjectedAtDatetime returns the old "projected_at_datetime" field's value of the Patient entity.
+// If the Patient object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PatientMutation) OldProjectedAtDatetime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProjectedAtDatetime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProjectedAtDatetime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProjectedAtDatetime: %w", err)
+	}
+	return oldValue.ProjectedAtDatetime, nil
+}
+
+// ResetProjectedAtDatetime resets all changes to the "projected_at_datetime" field.
+func (m *PatientMutation) ResetProjectedAtDatetime() {
+	m.projected_at_datetime = nil
+}
+
 // Where appends a list predicates to the PatientMutation builder.
 func (m *PatientMutation) Where(ps ...predicate.Patient) {
 	m.predicates = append(m.predicates, ps...)
@@ -926,7 +1079,7 @@ func (m *PatientMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PatientMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 6)
 	if m.name != nil {
 		fields = append(fields, patient.FieldName)
 	}
@@ -935,6 +1088,15 @@ func (m *PatientMutation) Fields() []string {
 	}
 	if m.age != nil {
 		fields = append(fields, patient.FieldAge)
+	}
+	if m.discharged != nil {
+		fields = append(fields, patient.FieldDischarged)
+	}
+	if m.current_version != nil {
+		fields = append(fields, patient.FieldCurrentVersion)
+	}
+	if m.projected_at_datetime != nil {
+		fields = append(fields, patient.FieldProjectedAtDatetime)
 	}
 	return fields
 }
@@ -950,6 +1112,12 @@ func (m *PatientMutation) Field(name string) (ent.Value, bool) {
 		return m.Ward()
 	case patient.FieldAge:
 		return m.Age()
+	case patient.FieldDischarged:
+		return m.Discharged()
+	case patient.FieldCurrentVersion:
+		return m.CurrentVersion()
+	case patient.FieldProjectedAtDatetime:
+		return m.ProjectedAtDatetime()
 	}
 	return nil, false
 }
@@ -965,6 +1133,12 @@ func (m *PatientMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldWard(ctx)
 	case patient.FieldAge:
 		return m.OldAge(ctx)
+	case patient.FieldDischarged:
+		return m.OldDischarged(ctx)
+	case patient.FieldCurrentVersion:
+		return m.OldCurrentVersion(ctx)
+	case patient.FieldProjectedAtDatetime:
+		return m.OldProjectedAtDatetime(ctx)
 	}
 	return nil, fmt.Errorf("unknown Patient field %s", name)
 }
@@ -995,6 +1169,27 @@ func (m *PatientMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAge(v)
 		return nil
+	case patient.FieldDischarged:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDischarged(v)
+		return nil
+	case patient.FieldCurrentVersion:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentVersion(v)
+		return nil
+	case patient.FieldProjectedAtDatetime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProjectedAtDatetime(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Patient field %s", name)
 }
@@ -1009,6 +1204,9 @@ func (m *PatientMutation) AddedFields() []string {
 	if m.addage != nil {
 		fields = append(fields, patient.FieldAge)
 	}
+	if m.addcurrent_version != nil {
+		fields = append(fields, patient.FieldCurrentVersion)
+	}
 	return fields
 }
 
@@ -1021,6 +1219,8 @@ func (m *PatientMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedWard()
 	case patient.FieldAge:
 		return m.AddedAge()
+	case patient.FieldCurrentVersion:
+		return m.AddedCurrentVersion()
 	}
 	return nil, false
 }
@@ -1044,6 +1244,13 @@ func (m *PatientMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddAge(v)
 		return nil
+	case patient.FieldCurrentVersion:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCurrentVersion(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Patient numeric field %s", name)
 }
@@ -1051,7 +1258,11 @@ func (m *PatientMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *PatientMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(patient.FieldCurrentVersion) {
+		fields = append(fields, patient.FieldCurrentVersion)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1064,6 +1275,11 @@ func (m *PatientMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *PatientMutation) ClearField(name string) error {
+	switch name {
+	case patient.FieldCurrentVersion:
+		m.ClearCurrentVersion()
+		return nil
+	}
 	return fmt.Errorf("unknown Patient nullable field %s", name)
 }
 
@@ -1079,6 +1295,15 @@ func (m *PatientMutation) ResetField(name string) error {
 		return nil
 	case patient.FieldAge:
 		m.ResetAge()
+		return nil
+	case patient.FieldDischarged:
+		m.ResetDischarged()
+		return nil
+	case patient.FieldCurrentVersion:
+		m.ResetCurrentVersion()
+		return nil
+	case patient.FieldProjectedAtDatetime:
+		m.ResetProjectedAtDatetime()
 		return nil
 	}
 	return fmt.Errorf("unknown Patient field %s", name)

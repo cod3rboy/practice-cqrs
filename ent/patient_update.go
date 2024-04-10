@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -83,6 +84,61 @@ func (pu *PatientUpdate) AddAge(i int) *PatientUpdate {
 	return pu
 }
 
+// SetDischarged sets the "discharged" field.
+func (pu *PatientUpdate) SetDischarged(b bool) *PatientUpdate {
+	pu.mutation.SetDischarged(b)
+	return pu
+}
+
+// SetNillableDischarged sets the "discharged" field if the given value is not nil.
+func (pu *PatientUpdate) SetNillableDischarged(b *bool) *PatientUpdate {
+	if b != nil {
+		pu.SetDischarged(*b)
+	}
+	return pu
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (pu *PatientUpdate) SetCurrentVersion(i int32) *PatientUpdate {
+	pu.mutation.ResetCurrentVersion()
+	pu.mutation.SetCurrentVersion(i)
+	return pu
+}
+
+// SetNillableCurrentVersion sets the "current_version" field if the given value is not nil.
+func (pu *PatientUpdate) SetNillableCurrentVersion(i *int32) *PatientUpdate {
+	if i != nil {
+		pu.SetCurrentVersion(*i)
+	}
+	return pu
+}
+
+// AddCurrentVersion adds i to the "current_version" field.
+func (pu *PatientUpdate) AddCurrentVersion(i int32) *PatientUpdate {
+	pu.mutation.AddCurrentVersion(i)
+	return pu
+}
+
+// ClearCurrentVersion clears the value of the "current_version" field.
+func (pu *PatientUpdate) ClearCurrentVersion() *PatientUpdate {
+	pu.mutation.ClearCurrentVersion()
+	return pu
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (pu *PatientUpdate) SetProjectedAtDatetime(t time.Time) *PatientUpdate {
+	pu.mutation.SetProjectedAtDatetime(t)
+	return pu
+}
+
+// SetNillableProjectedAtDatetime sets the "projected_at_datetime" field if the given value is not nil.
+func (pu *PatientUpdate) SetNillableProjectedAtDatetime(t *time.Time) *PatientUpdate {
+	if t != nil {
+		pu.SetProjectedAtDatetime(*t)
+	}
+	return pu
+}
+
 // Mutation returns the PatientMutation object of the builder.
 func (pu *PatientUpdate) Mutation() *PatientMutation {
 	return pu.mutation
@@ -116,7 +172,7 @@ func (pu *PatientUpdate) ExecX(ctx context.Context) {
 }
 
 func (pu *PatientUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(patient.Table, patient.Columns, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(patient.Table, patient.Columns, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeUUID))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -138,6 +194,21 @@ func (pu *PatientUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.AddedAge(); ok {
 		_spec.AddField(patient.FieldAge, field.TypeInt, value)
+	}
+	if value, ok := pu.mutation.Discharged(); ok {
+		_spec.SetField(patient.FieldDischarged, field.TypeBool, value)
+	}
+	if value, ok := pu.mutation.CurrentVersion(); ok {
+		_spec.SetField(patient.FieldCurrentVersion, field.TypeInt32, value)
+	}
+	if value, ok := pu.mutation.AddedCurrentVersion(); ok {
+		_spec.AddField(patient.FieldCurrentVersion, field.TypeInt32, value)
+	}
+	if pu.mutation.CurrentVersionCleared() {
+		_spec.ClearField(patient.FieldCurrentVersion, field.TypeInt32)
+	}
+	if value, ok := pu.mutation.ProjectedAtDatetime(); ok {
+		_spec.SetField(patient.FieldProjectedAtDatetime, field.TypeTime, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -215,6 +286,61 @@ func (puo *PatientUpdateOne) AddAge(i int) *PatientUpdateOne {
 	return puo
 }
 
+// SetDischarged sets the "discharged" field.
+func (puo *PatientUpdateOne) SetDischarged(b bool) *PatientUpdateOne {
+	puo.mutation.SetDischarged(b)
+	return puo
+}
+
+// SetNillableDischarged sets the "discharged" field if the given value is not nil.
+func (puo *PatientUpdateOne) SetNillableDischarged(b *bool) *PatientUpdateOne {
+	if b != nil {
+		puo.SetDischarged(*b)
+	}
+	return puo
+}
+
+// SetCurrentVersion sets the "current_version" field.
+func (puo *PatientUpdateOne) SetCurrentVersion(i int32) *PatientUpdateOne {
+	puo.mutation.ResetCurrentVersion()
+	puo.mutation.SetCurrentVersion(i)
+	return puo
+}
+
+// SetNillableCurrentVersion sets the "current_version" field if the given value is not nil.
+func (puo *PatientUpdateOne) SetNillableCurrentVersion(i *int32) *PatientUpdateOne {
+	if i != nil {
+		puo.SetCurrentVersion(*i)
+	}
+	return puo
+}
+
+// AddCurrentVersion adds i to the "current_version" field.
+func (puo *PatientUpdateOne) AddCurrentVersion(i int32) *PatientUpdateOne {
+	puo.mutation.AddCurrentVersion(i)
+	return puo
+}
+
+// ClearCurrentVersion clears the value of the "current_version" field.
+func (puo *PatientUpdateOne) ClearCurrentVersion() *PatientUpdateOne {
+	puo.mutation.ClearCurrentVersion()
+	return puo
+}
+
+// SetProjectedAtDatetime sets the "projected_at_datetime" field.
+func (puo *PatientUpdateOne) SetProjectedAtDatetime(t time.Time) *PatientUpdateOne {
+	puo.mutation.SetProjectedAtDatetime(t)
+	return puo
+}
+
+// SetNillableProjectedAtDatetime sets the "projected_at_datetime" field if the given value is not nil.
+func (puo *PatientUpdateOne) SetNillableProjectedAtDatetime(t *time.Time) *PatientUpdateOne {
+	if t != nil {
+		puo.SetProjectedAtDatetime(*t)
+	}
+	return puo
+}
+
 // Mutation returns the PatientMutation object of the builder.
 func (puo *PatientUpdateOne) Mutation() *PatientMutation {
 	return puo.mutation
@@ -261,7 +387,7 @@ func (puo *PatientUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (puo *PatientUpdateOne) sqlSave(ctx context.Context) (_node *Patient, err error) {
-	_spec := sqlgraph.NewUpdateSpec(patient.Table, patient.Columns, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(patient.Table, patient.Columns, sqlgraph.NewFieldSpec(patient.FieldID, field.TypeUUID))
 	id, ok := puo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Patient.id" for update`)}
@@ -300,6 +426,21 @@ func (puo *PatientUpdateOne) sqlSave(ctx context.Context) (_node *Patient, err e
 	}
 	if value, ok := puo.mutation.AddedAge(); ok {
 		_spec.AddField(patient.FieldAge, field.TypeInt, value)
+	}
+	if value, ok := puo.mutation.Discharged(); ok {
+		_spec.SetField(patient.FieldDischarged, field.TypeBool, value)
+	}
+	if value, ok := puo.mutation.CurrentVersion(); ok {
+		_spec.SetField(patient.FieldCurrentVersion, field.TypeInt32, value)
+	}
+	if value, ok := puo.mutation.AddedCurrentVersion(); ok {
+		_spec.AddField(patient.FieldCurrentVersion, field.TypeInt32, value)
+	}
+	if puo.mutation.CurrentVersionCleared() {
+		_spec.ClearField(patient.FieldCurrentVersion, field.TypeInt32)
+	}
+	if value, ok := puo.mutation.ProjectedAtDatetime(); ok {
+		_spec.SetField(patient.FieldProjectedAtDatetime, field.TypeTime, value)
 	}
 	_node = &Patient{config: puo.config}
 	_spec.Assign = _node.assignValues

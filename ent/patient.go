@@ -5,24 +5,32 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/cod3rboy/practice-cqrs/ent/patient"
+	"github.com/google/uuid"
 )
 
 // Patient is the model entity for the Patient schema.
 type Patient struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Ward holds the value of the "ward" field.
 	Ward int `json:"ward,omitempty"`
 	// Age holds the value of the "age" field.
-	Age          int `json:"age,omitempty"`
-	selectValues sql.SelectValues
+	Age int `json:"age,omitempty"`
+	// Discharged holds the value of the "discharged" field.
+	Discharged bool `json:"discharged,omitempty"`
+	// CurrentVersion holds the value of the "current_version" field.
+	CurrentVersion *int32 `json:"current_version,omitempty"`
+	// ProjectedAtDatetime holds the value of the "projected_at_datetime" field.
+	ProjectedAtDatetime time.Time `json:"projected_at_datetime,omitempty"`
+	selectValues        sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -30,10 +38,16 @@ func (*Patient) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case patient.FieldID, patient.FieldWard, patient.FieldAge:
+		case patient.FieldDischarged:
+			values[i] = new(sql.NullBool)
+		case patient.FieldWard, patient.FieldAge, patient.FieldCurrentVersion:
 			values[i] = new(sql.NullInt64)
 		case patient.FieldName:
 			values[i] = new(sql.NullString)
+		case patient.FieldProjectedAtDatetime:
+			values[i] = new(sql.NullTime)
+		case patient.FieldID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -50,11 +64,11 @@ func (pa *Patient) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case patient.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				pa.ID = *value
 			}
-			pa.ID = int(value.Int64)
 		case patient.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -72,6 +86,25 @@ func (pa *Patient) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field age", values[i])
 			} else if value.Valid {
 				pa.Age = int(value.Int64)
+			}
+		case patient.FieldDischarged:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field discharged", values[i])
+			} else if value.Valid {
+				pa.Discharged = value.Bool
+			}
+		case patient.FieldCurrentVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field current_version", values[i])
+			} else if value.Valid {
+				pa.CurrentVersion = new(int32)
+				*pa.CurrentVersion = int32(value.Int64)
+			}
+		case patient.FieldProjectedAtDatetime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field projected_at_datetime", values[i])
+			} else if value.Valid {
+				pa.ProjectedAtDatetime = value.Time
 			}
 		default:
 			pa.selectValues.Set(columns[i], values[i])
@@ -117,6 +150,17 @@ func (pa *Patient) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("age=")
 	builder.WriteString(fmt.Sprintf("%v", pa.Age))
+	builder.WriteString(", ")
+	builder.WriteString("discharged=")
+	builder.WriteString(fmt.Sprintf("%v", pa.Discharged))
+	builder.WriteString(", ")
+	if v := pa.CurrentVersion; v != nil {
+		builder.WriteString("current_version=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("projected_at_datetime=")
+	builder.WriteString(pa.ProjectedAtDatetime.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

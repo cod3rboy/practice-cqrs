@@ -3,52 +3,55 @@
 package patient
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"github.com/cod3rboy/practice-cqrs/ent/predicate"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Patient {
+func ID(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Patient {
+func IDEQ(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Patient {
+func IDNEQ(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Patient {
+func IDIn(ids ...uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Patient {
+func IDNotIn(ids ...uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Patient {
+func IDGT(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Patient {
+func IDGTE(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Patient {
+func IDLT(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Patient {
+func IDLTE(id uuid.UUID) predicate.Patient {
 	return predicate.Patient(sql.FieldLTE(FieldID, id))
 }
 
@@ -65,6 +68,21 @@ func Ward(v int) predicate.Patient {
 // Age applies equality check predicate on the "age" field. It's identical to AgeEQ.
 func Age(v int) predicate.Patient {
 	return predicate.Patient(sql.FieldEQ(FieldAge, v))
+}
+
+// Discharged applies equality check predicate on the "discharged" field. It's identical to DischargedEQ.
+func Discharged(v bool) predicate.Patient {
+	return predicate.Patient(sql.FieldEQ(FieldDischarged, v))
+}
+
+// CurrentVersion applies equality check predicate on the "current_version" field. It's identical to CurrentVersionEQ.
+func CurrentVersion(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldEQ(FieldCurrentVersion, v))
+}
+
+// ProjectedAtDatetime applies equality check predicate on the "projected_at_datetime" field. It's identical to ProjectedAtDatetimeEQ.
+func ProjectedAtDatetime(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldEQ(FieldProjectedAtDatetime, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -210,6 +228,106 @@ func AgeLT(v int) predicate.Patient {
 // AgeLTE applies the LTE predicate on the "age" field.
 func AgeLTE(v int) predicate.Patient {
 	return predicate.Patient(sql.FieldLTE(FieldAge, v))
+}
+
+// DischargedEQ applies the EQ predicate on the "discharged" field.
+func DischargedEQ(v bool) predicate.Patient {
+	return predicate.Patient(sql.FieldEQ(FieldDischarged, v))
+}
+
+// DischargedNEQ applies the NEQ predicate on the "discharged" field.
+func DischargedNEQ(v bool) predicate.Patient {
+	return predicate.Patient(sql.FieldNEQ(FieldDischarged, v))
+}
+
+// CurrentVersionEQ applies the EQ predicate on the "current_version" field.
+func CurrentVersionEQ(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldEQ(FieldCurrentVersion, v))
+}
+
+// CurrentVersionNEQ applies the NEQ predicate on the "current_version" field.
+func CurrentVersionNEQ(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldNEQ(FieldCurrentVersion, v))
+}
+
+// CurrentVersionIn applies the In predicate on the "current_version" field.
+func CurrentVersionIn(vs ...int32) predicate.Patient {
+	return predicate.Patient(sql.FieldIn(FieldCurrentVersion, vs...))
+}
+
+// CurrentVersionNotIn applies the NotIn predicate on the "current_version" field.
+func CurrentVersionNotIn(vs ...int32) predicate.Patient {
+	return predicate.Patient(sql.FieldNotIn(FieldCurrentVersion, vs...))
+}
+
+// CurrentVersionGT applies the GT predicate on the "current_version" field.
+func CurrentVersionGT(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldGT(FieldCurrentVersion, v))
+}
+
+// CurrentVersionGTE applies the GTE predicate on the "current_version" field.
+func CurrentVersionGTE(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldGTE(FieldCurrentVersion, v))
+}
+
+// CurrentVersionLT applies the LT predicate on the "current_version" field.
+func CurrentVersionLT(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldLT(FieldCurrentVersion, v))
+}
+
+// CurrentVersionLTE applies the LTE predicate on the "current_version" field.
+func CurrentVersionLTE(v int32) predicate.Patient {
+	return predicate.Patient(sql.FieldLTE(FieldCurrentVersion, v))
+}
+
+// CurrentVersionIsNil applies the IsNil predicate on the "current_version" field.
+func CurrentVersionIsNil() predicate.Patient {
+	return predicate.Patient(sql.FieldIsNull(FieldCurrentVersion))
+}
+
+// CurrentVersionNotNil applies the NotNil predicate on the "current_version" field.
+func CurrentVersionNotNil() predicate.Patient {
+	return predicate.Patient(sql.FieldNotNull(FieldCurrentVersion))
+}
+
+// ProjectedAtDatetimeEQ applies the EQ predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeEQ(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldEQ(FieldProjectedAtDatetime, v))
+}
+
+// ProjectedAtDatetimeNEQ applies the NEQ predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeNEQ(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldNEQ(FieldProjectedAtDatetime, v))
+}
+
+// ProjectedAtDatetimeIn applies the In predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeIn(vs ...time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldIn(FieldProjectedAtDatetime, vs...))
+}
+
+// ProjectedAtDatetimeNotIn applies the NotIn predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeNotIn(vs ...time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldNotIn(FieldProjectedAtDatetime, vs...))
+}
+
+// ProjectedAtDatetimeGT applies the GT predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeGT(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldGT(FieldProjectedAtDatetime, v))
+}
+
+// ProjectedAtDatetimeGTE applies the GTE predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeGTE(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldGTE(FieldProjectedAtDatetime, v))
+}
+
+// ProjectedAtDatetimeLT applies the LT predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeLT(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldLT(FieldProjectedAtDatetime, v))
+}
+
+// ProjectedAtDatetimeLTE applies the LTE predicate on the "projected_at_datetime" field.
+func ProjectedAtDatetimeLTE(v time.Time) predicate.Patient {
+	return predicate.Patient(sql.FieldLTE(FieldProjectedAtDatetime, v))
 }
 
 // And groups predicates with the AND operator between them.

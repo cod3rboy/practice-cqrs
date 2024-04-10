@@ -17,6 +17,12 @@ const (
 	FieldWard = "ward"
 	// FieldAge holds the string denoting the age field in the database.
 	FieldAge = "age"
+	// FieldDischarged holds the string denoting the discharged field in the database.
+	FieldDischarged = "discharged"
+	// FieldCurrentVersion holds the string denoting the current_version field in the database.
+	FieldCurrentVersion = "current_version"
+	// FieldProjectedAtDatetime holds the string denoting the projected_at_datetime field in the database.
+	FieldProjectedAtDatetime = "projected_at_datetime"
 	// Table holds the table name of the patient in the database.
 	Table = "patients"
 )
@@ -27,6 +33,9 @@ var Columns = []string{
 	FieldName,
 	FieldWard,
 	FieldAge,
+	FieldDischarged,
+	FieldCurrentVersion,
+	FieldProjectedAtDatetime,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -60,4 +69,19 @@ func ByWard(opts ...sql.OrderTermOption) OrderOption {
 // ByAge orders the results by the age field.
 func ByAge(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAge, opts...).ToFunc()
+}
+
+// ByDischarged orders the results by the discharged field.
+func ByDischarged(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDischarged, opts...).ToFunc()
+}
+
+// ByCurrentVersion orders the results by the current_version field.
+func ByCurrentVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCurrentVersion, opts...).ToFunc()
+}
+
+// ByProjectedAtDatetime orders the results by the projected_at_datetime field.
+func ByProjectedAtDatetime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProjectedAtDatetime, opts...).ToFunc()
 }
