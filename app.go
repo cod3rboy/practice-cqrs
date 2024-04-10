@@ -7,6 +7,7 @@ import (
 	"github.com/cod3rboy/practice-cqrs/db"
 	"github.com/cod3rboy/practice-cqrs/eventstore"
 	"github.com/cod3rboy/practice-cqrs/handlers"
+	"github.com/cod3rboy/practice-cqrs/repositories"
 	"github.com/cod3rboy/practice-cqrs/server"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -21,6 +22,7 @@ func SetupAndRun() {
 			db.NewDatabaseClient,
 			server.NewServer,
 			fx.Annotate(eventstore.NewPostgresEventStore, fx.As(new(eventstore.Store))),
+			fx.Annotate(repositories.NewPatientRepository, fx.As(new(repositories.PatientRepository))),
 		),
 		handlers.HandlersModule,
 		TemporalModule,
