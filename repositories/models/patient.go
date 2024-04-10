@@ -40,13 +40,13 @@ func (data *PatientEventData) FromEvent(event eventstore.Event) {
 }
 
 type Patient struct {
-	ID             string
-	Name           string
-	WardNumber     int
-	Age            int
-	Discharged     bool
-	CurrentVersion int32
-	ProjectionTime time.Time
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	WardNumber     int       `json:"ward_number"`
+	Age            int       `json:"age"`
+	Discharged     bool      `json:"discharged"`
+	CurrentVersion int32     `json:"current_version"`
+	ProjectionTime time.Time `json:"projection_time"`
 }
 
 type PatientEvent struct {
