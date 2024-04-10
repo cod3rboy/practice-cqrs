@@ -8,6 +8,7 @@ import (
 	"github.com/cod3rboy/practice-cqrs/db"
 	"github.com/cod3rboy/practice-cqrs/ent"
 	"github.com/cod3rboy/practice-cqrs/ent/patient"
+	"github.com/cod3rboy/practice-cqrs/ent/predicate"
 	"github.com/cod3rboy/practice-cqrs/eventstore"
 	"github.com/cod3rboy/practice-cqrs/repositories/models"
 	"github.com/google/uuid"
@@ -16,6 +17,13 @@ import (
 )
 
 type PatientRepository interface {
+	PublishCreatePatient(ctx context.Context, newPatient models.PatientEventData) (string, error)
+	PublishPatientEvent(ctx context.Context, params PublishPatientEventParams) (string, error)
+	WritePatient(ctx context.Context, patient models.Patient) (models.Patient, error)
+	GetPatientByID(ctx context.Context, patientID string) (models.Patient, error)
+	GetPatientByPredicates(ctx context.Context, predicates ...predicate.Patient) (models.Patient, error)
+	GetPatientEventsByID(ctx context.Context, patientID string) ([]models.PatientEvent, error)
+	GetPatients(ctx context.Context) ([]models.Patient, error)
 }
 
 type patientRepository struct {
@@ -99,6 +107,19 @@ func (r *patientRepository) GetPatientByID(ctx context.Context, patientID string
 
 	if err != nil {
 		r.logger.Warn("failed to find projection", zap.String("Patient ID", patientID), zap.Error(err))
+		return
+	}
+
+	result = PatientFromProjection(projection)
+
+	return
+}
+
+func (r *patientRepository) GetPatientByPredicates(ctx context.Context, predicates ...predicate.Patient) (result models.Patient, err error) {
+	projection, err := r.db.Patient.Query().Where(predicates...).Only(ctx)
+
+	if err != nil {
+		r.logger.Warn("failed to find projection", zap.Any("predicates", predicates))
 		return
 	}
 
