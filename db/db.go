@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/cod3rboy/practice-cqrs/config"
 	"github.com/cod3rboy/practice-cqrs/ent"
+	_ "github.com/lib/pq"
 	"go.uber.org/fx"
 )
 
