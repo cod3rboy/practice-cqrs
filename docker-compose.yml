@@ -1,0 +1,58 @@
+version: "3.5"
+services:
+  # PostgreSQL Service
+  postgresql:
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+      POSTGRES_DB: postgresql
+    image: postgres:16.2
+    expose:
+      - 5432
+  # Patient API Service
+  patient-api:
+    restart: always
+    depends_on:
+      - postgresql
+      - temporal
+    env_file:
+      - .env
+    build: .
+    ports:
+      - 3001:3001
+
+  # Temporal Service
+  temporal:
+    restart: always
+    depends_on:
+      - postgresql
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PWD=admin
+      - POSTGRES_SEEDS=postgresql
+    image: temporalio/auto-setup:1.22
+    ports:
+      - 7233:7233
+  temporal-admin-tools:
+    restart: always
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.22
+    stdin_open: true
+    tty: true
+  temporal-ui:
+    restart: always
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.26.1
+    ports:
+      - 8080:8080

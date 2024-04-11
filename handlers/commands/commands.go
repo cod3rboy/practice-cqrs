@@ -14,9 +14,10 @@ import (
 )
 
 type PatientCommand struct {
-	Temporal client.Client
-	Workflow *workflows.PatientWorkflow
-	Logger   *zap.Logger
+	Temporal  client.Client
+	Workflow  *workflows.PatientWorkflow
+	Logger    *zap.Logger
+	TaskQueue string
 }
 
 type NewPatientCommandParams struct {
@@ -29,9 +30,10 @@ type NewPatientCommandParams struct {
 
 func NewPatientCommand(params NewPatientCommandParams) *PatientCommand {
 	cmd := &PatientCommand{
-		Logger:   params.Logger,
-		Temporal: params.Temporal,
-		Workflow: params.Workflow,
+		Logger:    params.Logger,
+		Temporal:  params.Temporal,
+		Workflow:  params.Workflow,
+		TaskQueue: "patients-worker",
 	}
 	params.Server.Router().POST("/patient/admit", cmd.Admit)
 	params.Server.Router().POST("/patient/transfer", cmd.Transfer)
@@ -60,6 +62,7 @@ func (c *PatientCommand) Admit(ctx *gin.Context) {
 
 	wo := client.StartWorkflowOptions{
 		ID: "AdmitPatient_" + patientId.String(),
+		TaskQueue: c.TaskQueue,
 	}
 
 	c.Logger.Info("starting workflow", zap.String("workflow id", wo.ID))
@@ -112,6 +115,7 @@ func (c *PatientCommand) Transfer(ctx *gin.Context) {
 
 	wo := client.StartWorkflowOptions{
 		ID: "TransferPatient_" + uuid.NewString(),
+		TaskQueue: c.TaskQueue,
 	}
 
 	c.Logger.Info("starting workflow", zap.String("workflow id", wo.ID))
@@ -162,6 +166,7 @@ func (c *PatientCommand) Discharge(ctx *gin.Context) {
 
 	wo := client.StartWorkflowOptions{
 		ID: "DischargePatient_" + uuid.NewString(),
+		TaskQueue: c.TaskQueue,
 	}
 
 	c.Logger.Info("starting workflow", zap.String("workflow id", wo.ID))
@@ -212,6 +217,7 @@ func (c *PatientCommand) UpdateAge(ctx *gin.Context) {
 
 	wo := client.StartWorkflowOptions{
 		ID: "PatientUpdateAge_" + uuid.NewString(),
+		TaskQueue: c.TaskQueue,
 	}
 
 	c.Logger.Info("starting workflow", zap.String("workflow id", wo.ID))
@@ -263,6 +269,7 @@ func (c *PatientCommand) UpdateName(ctx *gin.Context) {
 
 	wo := client.StartWorkflowOptions{
 		ID: "PatientUpdateName_" + uuid.NewString(),
+		TaskQueue: c.TaskQueue,
 	}
 
 	c.Logger.Info("starting workflow", zap.String("workflow id", wo.ID))

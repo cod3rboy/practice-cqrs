@@ -73,7 +73,7 @@ type NewWorkerParams struct {
 }
 
 func NewWorker(params NewWorkerParams) worker.Worker {
-	w := worker.New(params.Temporal, "patient-worker", worker.Options{})
+	w := worker.New(params.Temporal, "patients-worker", worker.Options{})
 
 	params.LC.Append(fx.Hook{
 		OnStart: func(context.Context) error {
