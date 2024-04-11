@@ -61,7 +61,7 @@ func (c *PatientCommand) Admit(ctx *gin.Context) {
 	patientId := uuid.New()
 
 	wo := client.StartWorkflowOptions{
-		ID: "AdmitPatient_" + patientId.String(),
+		ID:        "AdmitPatient_" + patientId.String(),
 		TaskQueue: c.TaskQueue,
 	}
 
@@ -114,7 +114,7 @@ func (c *PatientCommand) Transfer(ctx *gin.Context) {
 	}
 
 	wo := client.StartWorkflowOptions{
-		ID: "TransferPatient_" + uuid.NewString(),
+		ID:        "TransferPatient_" + uuid.NewString(),
 		TaskQueue: c.TaskQueue,
 	}
 
@@ -165,7 +165,7 @@ func (c *PatientCommand) Discharge(ctx *gin.Context) {
 	}
 
 	wo := client.StartWorkflowOptions{
-		ID: "DischargePatient_" + uuid.NewString(),
+		ID:        "DischargePatient_" + uuid.NewString(),
 		TaskQueue: c.TaskQueue,
 	}
 
@@ -216,7 +216,7 @@ func (c *PatientCommand) UpdateAge(ctx *gin.Context) {
 	}
 
 	wo := client.StartWorkflowOptions{
-		ID: "PatientUpdateAge_" + uuid.NewString(),
+		ID:        "PatientUpdateAge_" + uuid.NewString(),
 		TaskQueue: c.TaskQueue,
 	}
 
@@ -268,7 +268,7 @@ func (c *PatientCommand) UpdateName(ctx *gin.Context) {
 	}
 
 	wo := client.StartWorkflowOptions{
-		ID: "PatientUpdateName_" + uuid.NewString(),
+		ID:        "PatientUpdateName_" + uuid.NewString(),
 		TaskQueue: c.TaskQueue,
 	}
 
