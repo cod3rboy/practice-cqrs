@@ -23,7 +23,7 @@ type NewDatabaseClientParams struct {
 func NewDatabaseClient(lc fx.Lifecycle, params NewDatabaseClientParams) *DBClient {
 	dbClient := &DBClient{}
 	lc.Append(fx.Hook{
-		OnStart: func(context.Context) error {
+		OnStart: func(ctx context.Context) error {
 			client, err := ent.Open(dialect.Postgres,
 				fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 					params.Config.DBHost,
@@ -38,6 +38,11 @@ func NewDatabaseClient(lc fx.Lifecycle, params NewDatabaseClientParams) *DBClien
 			}
 
 			dbClient.Client = client
+
+			// migration logic
+			if err := client.Schema.Create(ctx); err != nil {
+				return err
+			}
 			return nil
 		},
 		OnStop: func(context.Context) error {
