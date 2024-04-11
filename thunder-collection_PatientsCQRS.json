@@ -1,0 +1,166 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "PatientsCQRS",
+    "dateExported": "2024-04-11T16:05:31.827Z",
+    "version": "1.1",
+    "folders": [
+        {
+            "_id": "b2354e41-2f03-41b9-a838-857eb2a1f060",
+            "name": "Commands",
+            "containerId": "",
+            "created": "2024-04-11T15:58:08.270Z",
+            "sortNum": 10000
+        },
+        {
+            "_id": "2f088fae-1011-4b60-9ee1-4865332734c1",
+            "name": "Queries",
+            "containerId": "",
+            "created": "2024-04-11T15:58:12.910Z",
+            "sortNum": 20000
+        }
+    ],
+    "requests": [
+        {
+            "_id": "ab7316ec-0746-4c45-abf4-c0e86282a818",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "b2354e41-2f03-41b9-a838-857eb2a1f060",
+            "name": "Admit New Patient",
+            "url": "/patient/admit",
+            "method": "POST",
+            "sortNum": 20000,
+            "created": "2024-04-11T15:59:55.985Z",
+            "modified": "2024-04-11T16:00:24.749Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"Dheeraj Kumar\",\n  \"ward\": 10,\n  \"age\": 25\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "9ab340d6-e79d-4f04-841c-aca03f21b4e3",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "b2354e41-2f03-41b9-a838-857eb2a1f060",
+            "name": "Transfer Patient",
+            "url": "/patient/transfer",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2024-04-11T16:00:47.900Z",
+            "modified": "2024-04-11T16:01:19.971Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"id\": \"b8a41cc6-b179-481f-874a-cd9a65f08e86\",\n  \"ward\": 100\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "981bf5cc-e5aa-4e86-826a-60e47e9010a6",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "b2354e41-2f03-41b9-a838-857eb2a1f060",
+            "name": "Discharge Patient",
+            "url": "/patient/discharge",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2024-04-11T16:01:35.477Z",
+            "modified": "2024-04-11T16:01:51.352Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"id\": \"b8a41cc6-b179-481f-874a-cd9a65f08e86\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "9ffcf712-b964-40c9-933e-9c93f9d2f0a9",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "b2354e41-2f03-41b9-a838-857eb2a1f060",
+            "name": "Update Patient Name",
+            "url": "/patient/updateName",
+            "method": "POST",
+            "sortNum": 50000,
+            "created": "2024-04-11T16:02:04.783Z",
+            "modified": "2024-04-11T16:02:30.868Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"id\": \"b8a41cc6-b179-481f-874a-cd9a65f08e86\",\n  \"name\": \"Dheeraj K\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "5c5bbbcd-f863-497c-a2fc-9d4244e48b48",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "b2354e41-2f03-41b9-a838-857eb2a1f060",
+            "name": "Update Patient Age",
+            "url": "/patient/updateAge",
+            "method": "POST",
+            "sortNum": 60000,
+            "created": "2024-04-11T16:03:00.133Z",
+            "modified": "2024-04-11T16:03:19.448Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"id\": \"b8a41cc6-b179-481f-874a-cd9a65f08e86\",\n  \"age\": 35\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "f6ed4de8-8eef-4107-9ccc-42a638aa32b1",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "2f088fae-1011-4b60-9ee1-4865332734c1",
+            "name": "All Patients",
+            "url": "/patient/all",
+            "method": "GET",
+            "sortNum": 70000,
+            "created": "2024-04-11T16:03:37.010Z",
+            "modified": "2024-04-11T16:03:41.721Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "287ee0fd-8ef3-409d-be6d-9d8015ad8d37",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "2f088fae-1011-4b60-9ee1-4865332734c1",
+            "name": "Patient By ID",
+            "url": "/patient/id/b8a41cc6-b179-481f-874a-cd9a65f08e86",
+            "method": "GET",
+            "sortNum": 80000,
+            "created": "2024-04-11T16:04:21.066Z",
+            "modified": "2024-04-11T16:04:45.058Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "9bb80165-0411-47e3-9271-8590b7c47440",
+            "colId": "38c68f8d-9968-492b-a48a-bc150412c324",
+            "containerId": "2f088fae-1011-4b60-9ee1-4865332734c1",
+            "name": "Patient By Name",
+            "url": "/patient/name/Dheeraj K",
+            "method": "GET",
+            "sortNum": 90000,
+            "created": "2024-04-11T16:05:03.045Z",
+            "modified": "2024-04-11T16:05:19.541Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        }
+    ],
+    "settings": {
+        "options": {
+            "baseUrl": "http://localhost:3001"
+        }
+    }
+}
