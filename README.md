@@ -53,7 +53,11 @@ You can also access temporal web ui at this address: http://localhost:8080 and s
 
 Now, application server should be up and running and you can play with the API endpoints.
 
+>Note: This manual build/run requires pre-running instances of Temporal and PostgreSQL. The application server will connect with these instances.
+
 ## Endpoints
+
+Base URL: http://localhost:3001
 
 The API exposes the following endpoints -
 
