@@ -1,12 +1,14 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/cod3rboy/practice-cqrs/config"
 	"go.temporal.io/sdk/client"
 	logger "go.temporal.io/sdk/log"
+	"go.temporal.io/sdk/worker"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
@@ -64,7 +66,33 @@ func (l *TemporalLogger) zapFieldsFromKeyValues(keyvalues []interface{}) []zap.F
 	return fields
 }
 
+type NewWorkerParams struct {
+	fx.In
+	Temporal client.Client
+	LC       fx.Lifecycle
+}
+
+func NewWorker(params NewWorkerParams) worker.Worker {
+	w := worker.New(params.Temporal, "patient-worker", worker.Options{})
+
+	params.LC.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			if err := w.Start(); err != nil {
+				return err
+			}
+			return nil
+		},
+		OnStop: func(context.Context) error {
+			w.Stop()
+			return nil
+		},
+	})
+
+	return w
+}
+
 var TemporalModule = fx.Provide(
 	fx.Annotate(NewTemporalLogger, fx.As(new(logger.Logger))),
 	NewTemporalClient,
+	NewWorker,
 )
